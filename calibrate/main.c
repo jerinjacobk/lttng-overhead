@@ -25,6 +25,21 @@ struct test_data {
 	struct lcore_data ldata[];
 } __rte_cache_aligned;
 
+#define STEP 100
+#define CENT_OPS(OP) do {     \
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
+} while (0)
+
+
 static void
 measure_perf(struct test_data *data)
 {
@@ -40,6 +55,8 @@ measure_perf(struct test_data *data)
 	}
 
 	cycles = total_calls ? (double)total_cycles / (double)total_calls : 0;
+	cycles /= STEP;
+	cycles /= 100; /* CENT_OPS */
 
 	ns = (cycles / (double)hz) * 1E9;
 	printf("cycles=%f ns=%f\n", cycles, ns);
@@ -75,58 +92,8 @@ __worker(struct lcore_data *ldata)
 	while (!ldata->done) {
 		start = rte_rdtsc();
 
-		for (i=0; i < 100; i++) {
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-			__asm__ volatile ("nop");
-
-		}
+		for (i=0; i < STEP; i++)
+			CENT_OPS(__asm__ volatile ("nop"));
 
 		ldata->total_cycles += rte_rdtsc() - start;
 		ldata->total_calls++;
