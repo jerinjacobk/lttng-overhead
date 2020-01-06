@@ -55,7 +55,7 @@ urcu-setup: prefix
 	git reset --hard $(URCU_VERSION) && \
 	cd $(APP_ROOT)/userspace-rcu && \
 	$(APP_ROOT)/userspace-rcu/bootstrap && \
-	$(APP_ROOT)/userspace-rcu/configure --prefix=$(APP_ROOT)/external-lib/  --enable-shared=no CFLAGS='-O3 -Ofast $(APP_CFLAGS) $(FLTO_CFLAGS)'
+	$(APP_ROOT)/userspace-rcu/configure --prefix=$(APP_ROOT)/external-lib/ CFLAGS='-O3 -Ofast $(APP_CFLAGS)'
 
 urcu:
 	@$(MAKE) -C $(APP_ROOT)/userspace-rcu/
@@ -79,7 +79,21 @@ dpdk-rebuild:
 
 dpdk-install: dpdk-setup dpdk
 
-setup:	clean_prefix plat-setup urcu-install dpdk-install
+lttng-ust-setup: plat-setup prefix
+	cd $(APP_ROOT)/lttng-ust && \
+	git clean -dxf && \
+	$(APP_ROOT)/lttng-ust/bootstrap && \
+	$(APP_ROOT)/lttng-ust/configure --disable-man-pages --prefix=$(APP_ROOT)/external-lib/ CPPFLAGS='-I$(APP_ROOT)/external-lib/include' LDFLAGS='-L$(APP_ROOT)/external-lib/lib' CFLAGS='-O3 -Ofast $(APP_CFLAGS)'
+
+.PHONY: lttng-ust
+lttng-ust:
+	@$(MAKE) -C $(APP_ROOT)/lttng-ust/
+	@$(MAKE) install -C $(APP_ROOT)/lttng-ust/
+
+
+lttng-ust-install: lttng-ust-setup lttng-ust
+
+setup:	clean_prefix plat-setup urcu-install dpdk-install lttng-ust-install
 
 tag:
 	@rm -f tags
