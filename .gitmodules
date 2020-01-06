@@ -1,0 +1,12 @@
+[submodule "dpdk"]
+	path = dpdk
+	url = http://dpdk.org/git/dpdk
+[submodule "lttng-tools"]
+	path = lttng-tools
+	url = https://github.com/lttng/lttng-tools.git
+[submodule "lttng-ust"]
+	path = lttng-ust
+	url = https://github.com/lttng/lttng-ust.git
+[submodule "userspace-rcu"]
+	path = userspace-rcu
+	url = https://github.com/urcu/userspace-rcu.git
