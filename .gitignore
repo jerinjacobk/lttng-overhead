@@ -1,3 +1,4 @@
 external-lib/
 tags
 core
+*/build/*

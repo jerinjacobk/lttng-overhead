@@ -17,7 +17,7 @@ export RTE_SDK
 export RTE_TARGET
 
 ## urcu configration
-URCU_VERSION=v0.11.0
+URCU_VERSION=HEAD
 
 #------------------------------------------------------------------------------#
 
