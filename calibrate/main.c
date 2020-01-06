@@ -25,26 +25,8 @@ struct test_data {
 	struct lcore_data ldata[];
 } __rte_cache_aligned;
 
-static double
-calibrate_overhead(struct test_data *data)
-{
-	uint64_t total_cycles = 0;
-	uint64_t total_calls = 0;
-	double cycles;
-	unsigned int workers;
-
-	for (workers = 0; workers < data->nb_workers; workers++) {
-		total_cycles += data->ldata[workers].total_cycles;
-		total_calls += data->ldata[workers].total_calls;
-	}
-
-	cycles = total_calls ? (double)total_cycles / (double)total_calls : 0;
-	return cycles;
-}
-
-
 static void
-measure_perf(struct test_data *data, double ref_cycles)
+measure_perf(struct test_data *data)
 {
 	uint64_t hz = rte_get_timer_hz();
 	uint64_t total_cycles = 0;
@@ -58,7 +40,6 @@ measure_perf(struct test_data *data, double ref_cycles)
 	}
 
 	cycles = total_calls ? (double)total_cycles / (double)total_calls : 0;
-	cycles -= ref_cycles;
 
 	ns = (cycles / (double)hz) * 1E9;
 	printf("cycles=%f ns=%f\n", cycles, ns);
@@ -86,144 +67,70 @@ signal_workers_to_finish(struct test_data *data)
 }
 
 static void __rte_noinline
-__cal_worker(struct lcore_data *ldata)
-{
-	uint64_t start;
-
-	while (!ldata->done) {
-		start = rte_rdtsc();
-
-
-		ldata->total_cycles += rte_rdtsc() - start;
-		ldata->total_calls++;
-	}
-}
-
-static void __rte_noinline
 __worker(struct lcore_data *ldata)
 {
 	uint64_t start;
+	int i;
 
 	while (!ldata->done) {
 		start = rte_rdtsc();
 
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
+		for (i=0; i < 100; i++) {
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
 
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
+			__asm__ volatile ("nop");
 
+		}
 
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
-__asm__ volatile ("nop");
 		ldata->total_cycles += rte_rdtsc() - start;
 		ldata->total_calls++;
 	}
-}
-
-
-static int
-cal_worker_fn(void *arg)
-{
-	struct lcore_data *ldata = arg;
-
-	ldata->started = 1;
-	rte_smp_wmb();
-
-	__cal_worker(ldata);
-
-	return 0;
 }
 
 static int
@@ -239,13 +146,11 @@ worker_fn(void *arg)
 	return 0;
 }
 
-
 int
 main(int argc, char **argv)
 {
 	unsigned int id, nb_cores, nb_workers, worker = 0;
 	struct test_data *data;
-	double ref_cycles;
 	size_t sz;
 	int rc;
 
@@ -266,29 +171,13 @@ main(int argc, char **argv)
 	if (data == NULL)
 		rte_panic("failed to allocate memory\n");
 
-	/* First pass to calibrate the overhead */
-	data->nb_workers = nb_workers;
-	RTE_LCORE_FOREACH_SLAVE(id)
-		rte_eal_remote_launch(cal_worker_fn, &data->ldata[worker++], id);
-
-	wait_till_workers_are_ready(data);
-	rte_delay_ms(1E2); /* Wait for some time to accumalate the stats */
-	ref_cycles = calibrate_overhead(data);
-	signal_workers_to_finish(data);
-
-	RTE_LCORE_FOREACH_SLAVE(id)
-		rte_eal_wait_lcore(id);
-
-	/* Second pass to find the real cycles */
-	worker = 0;
-	memset(data, 0, sz);
 	data->nb_workers = nb_workers;
 	RTE_LCORE_FOREACH_SLAVE(id)
 		rte_eal_remote_launch(worker_fn, &data->ldata[worker++], id);
 
 	wait_till_workers_are_ready(data);
 	rte_delay_ms(1E3); /* Wait for some time to accumalate the stats */
-	measure_perf(data, ref_cycles);
+	measure_perf(data);
 	signal_workers_to_finish(data);
 
 	RTE_LCORE_FOREACH_SLAVE(id)
