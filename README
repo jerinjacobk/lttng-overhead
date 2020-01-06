@@ -3,8 +3,9 @@ Build infrastructure
 1) Build external libraries
 # make setup PLAT=t96/t83/x86 #For respective platform
 
+
 2) Build the sepecific application 
-# make trace_overhead 
+# make calibrate
 
 Configuration:
 By default flto is enabled, comment out the following line in Makefile to disable it

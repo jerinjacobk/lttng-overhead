@@ -22,9 +22,9 @@ URCU_VERSION=v0.11.0
 #------------------------------------------------------------------------------#
 
 .NOTPARALLEL: prefix plat-setup
-all:
+all: calibrate
 
-clean: 
+clean: calibrate_clean
 
 prefix:
 	mkdir -p $(APP_ROOT)/external-lib/
@@ -112,3 +112,10 @@ setup:	clean_prefix plat-setup urcu-install dpdk-install lttng-ust-install lttng
 tag:
 	@rm -f tags
 	@ctags $$(find . -name \*[.chS])
+
+.PHONY: calibrate
+calibrate:
+	@$(MAKE) -C $(APP_ROOT)/calibrate/
+
+calibrate_clean:
+	@$(MAKE) -C $(APP_ROOT)/calibrate/ clean
