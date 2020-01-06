@@ -93,7 +93,21 @@ lttng-ust:
 
 lttng-ust-install: lttng-ust-setup lttng-ust
 
-setup:	clean_prefix plat-setup urcu-install dpdk-install lttng-ust-install
+lttng-tools-setup: plat-setup prefix
+	cd $(APP_ROOT)/lttng-tools && \
+	git clean -dxf && \
+	$(APP_ROOT)/lttng-tools/bootstrap && \
+	$(APP_ROOT)/lttng-tools/configure --disable-man-pages --prefix=$(APP_ROOT)/external-lib/ CPPFLAGS='-I$(APP_ROOT)/external-lib/include' LDFLAGS='-L$(APP_ROOT)/external-lib/lib' CFLAGS='-O3 -Ofast $(APP_CFLAGS)' PKG_CONFIG_PATH=$(APP_ROOT)/external-lib/lib/pkgconfig
+
+.PHONY: lttng-tools
+lttng-tools:
+	@$(MAKE) -C $(APP_ROOT)/lttng-tools/
+	@$(MAKE) install -C $(APP_ROOT)/lttng-tools/
+
+
+lttng-tools-install: lttng-tools-setup lttng-tools
+
+setup:	clean_prefix plat-setup urcu-install dpdk-install lttng-ust-install lttng-tools-install
 
 tag:
 	@rm -f tags
