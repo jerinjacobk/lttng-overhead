@@ -2,3 +2,4 @@ external-lib/
 tags
 core
 */build/*
+.vscode
