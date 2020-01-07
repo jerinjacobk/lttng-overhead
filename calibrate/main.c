@@ -41,7 +41,7 @@ OP;OP;OP;OP;OP;OP;OP;OP;OP;OP;\
 
 
 static void
-measure_perf(char *str, struct test_data *data)
+measure_perf(const char *str, struct test_data *data)
 {
 	uint64_t hz = rte_get_timer_hz();
 	uint64_t total_cycles = 0;
@@ -117,7 +117,7 @@ worker_fn_NOP(void *arg)
 }
 
 static void
-run_test(char *str, lcore_function_t fn, struct test_data *data, size_t sz)
+run_test(const char *str, lcore_function_t fn, struct test_data *data, size_t sz)
 {
 	unsigned int id, worker = 0;
 
