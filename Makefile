@@ -4,7 +4,7 @@ export APP_ROOT
 #---------------------------- Configuration -----------------------------------#
 ## APP wide configuration
 APP_CFLAGS = -ggdb3
-FLTO_CFLAGS = -flto -ffat-lto-objects -fwhole-program
+FLTO_CFLAGS =
 
 export FLTO_CFLAGS
 export APP_CFLAGS
@@ -55,7 +55,7 @@ urcu-setup: prefix
 	git reset --hard $(URCU_VERSION) && \
 	cd $(APP_ROOT)/userspace-rcu && \
 	$(APP_ROOT)/userspace-rcu/bootstrap && \
-	$(APP_ROOT)/userspace-rcu/configure --prefix=$(APP_ROOT)/external-lib/ CFLAGS='-O3 -Ofast $(APP_CFLAGS)'
+	$(APP_ROOT)/userspace-rcu/configure --prefix=$(APP_ROOT)/external-lib/ CFLAGS='-O3  $(APP_CFLAGS)'
 
 urcu:
 	@$(MAKE) -C $(APP_ROOT)/userspace-rcu/
@@ -83,7 +83,7 @@ lttng-ust-setup: plat-setup prefix
 	cd $(APP_ROOT)/lttng-ust && \
 	git clean -dxf && \
 	$(APP_ROOT)/lttng-ust/bootstrap && \
-	$(APP_ROOT)/lttng-ust/configure --disable-man-pages --prefix=$(APP_ROOT)/external-lib/ CPPFLAGS='-I$(APP_ROOT)/external-lib/include' LDFLAGS='-L$(APP_ROOT)/external-lib/lib' CFLAGS='-O3 -Ofast $(APP_CFLAGS)'
+	$(APP_ROOT)/lttng-ust/configure --disable-man-pages --disable-numa --prefix=$(APP_ROOT)/external-lib/ CPPFLAGS='-I$(APP_ROOT)/external-lib/include' LDFLAGS='-L$(APP_ROOT)/external-lib/lib' CFLAGS='-O3  $(APP_CFLAGS)'
 
 .PHONY: lttng-ust
 lttng-ust:
@@ -97,7 +97,7 @@ lttng-tools-setup: plat-setup prefix
 	cd $(APP_ROOT)/lttng-tools && \
 	git clean -dxf && \
 	$(APP_ROOT)/lttng-tools/bootstrap && \
-	$(APP_ROOT)/lttng-tools/configure --disable-man-pages --prefix=$(APP_ROOT)/external-lib/ CPPFLAGS='-I$(APP_ROOT)/external-lib/include' LDFLAGS='-L$(APP_ROOT)/external-lib/lib' CFLAGS='-O3 -Ofast $(APP_CFLAGS)' PKG_CONFIG_PATH=$(APP_ROOT)/external-lib/lib/pkgconfig
+	$(APP_ROOT)/lttng-tools/configure --disable-man-pages --disable-numa --prefix=$(APP_ROOT)/external-lib/ CPPFLAGS='-I$(APP_ROOT)/external-lib/include' LDFLAGS='-L$(APP_ROOT)/external-lib/lib' CFLAGS='-O3  $(APP_CFLAGS)' PKG_CONFIG_PATH=$(APP_ROOT)/external-lib/lib/pkgconfig
 
 .PHONY: lttng-tools
 lttng-tools:
