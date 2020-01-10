@@ -11,6 +11,8 @@
 #include <rte_malloc.h>
 #include <rte_lcore.h>
 
+#include "dpdk-tp.h"
+
 struct test_data;
 
 struct lcore_data {
@@ -83,7 +85,7 @@ signal_workers_to_finish(struct test_data *data)
 	}
 }
 
-/* Tests */
+/* NOP Tests */
 #define NOP __asm__ volatile ("nop")
 
 static void __rte_noinline
@@ -115,6 +117,41 @@ worker_fn_NOP(void *arg)
 
 	return 0;
 }
+
+/* ZERO_ARG test */
+
+#define ZERO_ARG tracepoint(dpdk, zero_arg)
+
+static void __rte_noinline
+__worker_ZERO_ARG(struct lcore_data *ldata)
+{
+	uint64_t start;
+	int i;
+
+	while (!ldata->done) {
+		start = rte_rdtsc();
+
+		for (i=0; i < STEP; i++)
+			CENT_OPS(ZERO_ARG);
+
+		ldata->total_cycles += rte_rdtsc() - start;
+		ldata->total_calls++;
+	}
+}
+
+static int
+worker_fn_ZERO_ARG(void *arg)
+{
+	struct lcore_data *ldata = arg;
+
+	ldata->started = 1;
+	rte_smp_wmb();
+
+	__worker_ZERO_ARG(ldata);
+
+	return 0;
+}
+
 
 static void
 run_test(const char *str, lcore_function_t fn, struct test_data *data, size_t sz)
@@ -161,6 +198,7 @@ main(int argc, char **argv)
 		rte_panic("failed to allocate memory\n");
 
 	run_test("NOP", worker_fn_NOP, data, sz);
+	run_test("ZERO_ARG", worker_fn_ZERO_ARG, data, sz);
 
 	rte_free(data);
 	return rte_eal_cleanup();

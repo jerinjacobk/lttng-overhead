@@ -6,6 +6,7 @@ APP = calibrate
 
 # all source are stored in SRCS-y
 SRCS-y := main.c
+SRCS-y += dpdk-tp.c
 
 # Build using pkg-config variables if possible
 $(shell pkg-config --exists libdpdk)
@@ -53,6 +54,7 @@ CFLAGS += $(WERROR_FLAGS)
 CFLAGS += -isystem $(APP_ROOT)/external-lib/include
 CFLAGS += -isystem $(APP_ROOT)/userspace-rcu/src/
 CFLAGS += -I$(APP_ROOT)/common
+CFLAGS += -I$(APP_ROOT)/calibrate/
 CFLAGS += $(APP_CFLAGS) $(FLTO_CFLAGS)
 
 LDFLAGS += -L$(APP_ROOT)/external-lib/lib -llttng-ust -ldl
