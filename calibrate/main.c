@@ -85,7 +85,7 @@ signal_workers_to_finish(struct test_data *data)
 	}
 }
 
-/* NOP Tests */
+ /* NOP Tests */
 #define NOP __asm__ volatile ("nop")
 
 static void __rte_noinline
@@ -117,6 +117,97 @@ worker_fn_NOP(void *arg)
 
 	return 0;
 }
+
+/* clock_gettime Test */
+
+static inline uint64_t get_clock(void)
+{
+	volatile uint64_t rc;
+
+	struct timespec ts;
+
+	if ((clock_gettime(CLOCK_MONOTONIC, &ts))) {
+		ts.tv_sec = 0;
+		ts.tv_nsec = 0;
+	}
+	rc = ((uint64_t) ts.tv_sec * 1000000000ULL) + ts.tv_nsec;
+
+	return rc;
+}
+
+#define GET_CLOCK get_clock()
+
+static void __rte_noinline
+__worker_GET_CLOCK(struct lcore_data *ldata)
+{
+	uint64_t start;
+	int i;
+
+	while (!ldata->done) {
+		start = rte_rdtsc();
+
+		for (i=0; i < STEP; i++)
+			CENT_OPS(GET_CLOCK);
+
+		ldata->total_cycles += rte_rdtsc() - start;
+		ldata->total_calls++;
+	}
+}
+
+static int
+worker_fn_GET_CLOCK(void *arg)
+{
+	struct lcore_data *ldata = arg;
+
+	ldata->started = 1;
+	rte_smp_wmb();
+
+	__worker_GET_CLOCK(ldata);
+
+	return 0;
+}
+
+static inline int get_cpu(void)
+{
+	volatile int rc;
+
+	rc = sched_getcpu();
+
+	return rc;
+}
+
+#define GET_CPU get_cpu()
+
+static void __rte_noinline
+__worker_GET_CPU(struct lcore_data *ldata)
+{
+	uint64_t start;
+	int i;
+
+	while (!ldata->done) {
+		start = rte_rdtsc();
+
+		for (i=0; i < STEP; i++)
+			CENT_OPS(GET_CPU);
+
+		ldata->total_cycles += rte_rdtsc() - start;
+		ldata->total_calls++;
+	}
+}
+
+static int
+worker_fn_GET_CPU(void *arg)
+{
+	struct lcore_data *ldata = arg;
+
+	ldata->started = 1;
+	rte_smp_wmb();
+
+	__worker_GET_CPU(ldata);
+
+	return 0;
+}
+
 
 /* ZERO_ARG test */
 
@@ -198,6 +289,8 @@ main(int argc, char **argv)
 		rte_panic("failed to allocate memory\n");
 
 	run_test("NOP", worker_fn_NOP, data, sz);
+	run_test("GET_CLOCK", worker_fn_GET_CLOCK, data, sz);
+	run_test("GET_CPU", worker_fn_GET_CPU, data, sz);
 	run_test("ZERO_ARG", worker_fn_ZERO_ARG, data, sz);
 
 	rte_free(data);
