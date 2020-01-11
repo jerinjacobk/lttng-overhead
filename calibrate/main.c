@@ -85,6 +85,127 @@ signal_workers_to_finish(struct test_data *data)
 	}
 }
 
+#include <lttng/ust-getcpu.h>
+
+static
+int plugin_getcpu(void)
+{
+	return rte_lcore_id();
+}
+
+static void lttng_ust_getcpu_plugin_init(void)
+{
+	int ret;
+
+	ret = lttng_ust_getcpu_override(plugin_getcpu);
+	if (ret) {
+		fprintf(stderr, "Error enabling getcpu override: %s\n",
+			strerror(-ret));
+		goto error;
+	}
+	return;
+
+error:
+	exit(EXIT_FAILURE);
+}
+
+#include <lttng/ust-clock.h>
+
+static
+uint64_t plugin_read64(void)
+{
+	return rte_rdtsc();
+}
+
+static
+uint64_t plugin_freq(void)
+{
+	return rte_get_timer_hz();
+}
+
+static
+int plugin_uuid(char *uuid)
+{
+	const char myuuid[] = "123456789012345678901234567890123456";
+
+	/*
+	 * Should read some unique identifier for this clock shared
+	 * across all components of the system using this clock for
+	 * tracing.
+	 */
+	memcpy(uuid, myuuid, LTTNG_UST_UUID_STR_LEN);
+	return 0;
+}
+
+static
+const char *plugin_name(void)
+{
+	return "dpdk_clock";
+}
+
+static
+const char *plugin_description(void)
+{
+	return "DPDK clock";
+}
+
+static void lttng_ust_clock_plugin_init(void)
+{
+	int ret;
+
+	ret = lttng_ust_trace_clock_set_read64_cb(plugin_read64);
+	if (ret) {
+		fprintf(stderr, "Error setting clock override read64 callback: %s\n",
+			strerror(-ret));
+		goto error;
+	}
+	ret = lttng_ust_trace_clock_set_freq_cb(plugin_freq);
+	if (ret) {
+		fprintf(stderr, "Error setting clock override freq callback: %s\n",
+			strerror(-ret));
+		goto error;
+	}
+	ret = lttng_ust_trace_clock_set_uuid_cb(plugin_uuid);
+	if (ret) {
+		fprintf(stderr, "Error setting clock override uuid callback: %s\n",
+			strerror(-ret));
+		goto error;
+	}
+
+	ret = lttng_ust_trace_clock_set_name_cb(plugin_name);
+	if (ret) {
+		fprintf(stderr, "Error setting clock override name callback: %s\n",
+			strerror(-ret));
+		goto error;
+	}
+
+	ret = lttng_ust_trace_clock_set_description_cb(plugin_description);
+	if (ret) {
+		fprintf(stderr, "Error setting clock override description callback: %s\n",
+			strerror(-ret));
+		goto error;
+	}
+
+	ret = lttng_ust_enable_trace_clock_override();
+	if (ret) {
+		fprintf(stderr, "Error enabling clock override: %s\n",
+			strerror(-ret));
+		goto error;
+	}
+
+	return;
+
+error:
+	exit(EXIT_FAILURE);
+}
+
+static void lttng_ust_plugin_init(void)
+{
+	lttng_ust_getcpu_plugin_init();
+	lttng_ust_clock_plugin_init();
+}
+
+
  /* NOP Tests */
 #define NOP __asm__ volatile ("nop")
 
@@ -270,6 +391,8 @@ main(int argc, char **argv)
 	struct test_data *data;
 	size_t sz;
 	int rc;
+
+	lttng_ust_plugin_init();
 
 	rc = rte_eal_init(argc, argv);
 	if (rc < 0)
