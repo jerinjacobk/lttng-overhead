@@ -1,12 +1,51 @@
 Build infrastructure
 --------------------
+0) Install the following packages
+a) libpopt-dev
+b) libxml2-dev
+
 1) Build external libraries
 # make setup PLAT=t96/t83/x86 #For respective platform
 
-
 2) Build the sepecific application 
-# make calibrate
+# make
 
-Configuration:
-By default flto is enabled, comment out the following line in Makefile to disable it
-APP_CFLAGS += -flto -ffat-lto-objects -fwhole-program
+
+How to run
+----------
+
+a) Start the lttng
+
+cd external-lib/bin/
+sudo ./lttng create --snapshot -o /tmp/debugrt
+sudo ./lttng enable-channel -u dpdk  --subbuf-size 16M --num-subbuf 4
+sudo ./lttng enable-event --userspace dpdk:zero_arg -c dpdk
+sudo ./lttng start
+
+b) Start the test application
+
+example:
+LD_PRELOAD=$PWD/external-lib/lib/liblttng-ust.so.0 ./calibrate/build/app/calibrate -c 0x300
+
+
+example output:
+
+ZERO_ARG is the lttng trace overhead for a "trace entry with void arg" with dpdk plugn for get_cpu and get_clock.
+
+[lttng-overhead-x86] $ sudo LD_PRELOAD=/export/lttng-overhead-x86/external-lib/lib/liblttng-ust.so.0 ./calibrate/build/app/calibrate -c 0xc0
+make[1]: Entering directory '/export/lttng-overhead-x86/calibrate'
+make[1]: Leaving directory '/export/lttng-overhead-x86/calibrate'
+EAL: Detected 56 lcore(s)
+EAL: Detected 2 NUMA nodes
+EAL: Multi-process socket /var/run/dpdk/rte/mp_socket
+EAL: Selected IOVA mode 'PA'
+EAL: Probing VFIO support...
+EAL: PCI device 0000:01:00.0 on NUMA socket 0
+EAL:   probe driver: 8086:1521 net_e1000_igb
+EAL: PCI device 0000:01:00.1 on NUMA socket 0
+EAL:   probe driver: 8086:1521 net_e1000_igb
+CPU Timer freq is 2600.000000MHz
+NOP: cycles=0.194834 ns=0.074936
+GET_CLOCK: cycles=47.854658 ns=18.405638
+GET_CPU: cycles=30.995892 ns=11.921497
+ZERO_ARG: cycles=236.945113 ns=91.132736
