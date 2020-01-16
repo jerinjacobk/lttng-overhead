@@ -364,6 +364,50 @@ worker_fn_ZERO_ARG(void *arg)
 	return 0;
 }
 
+/* ATOMIC test */
+
+uint16_t load;
+
+static inline uint16_t
+atomic_add(void)
+{
+	volatile uint16_t a;
+	a = __atomic_fetch_add(&load, 10, __ATOMIC_ACQUIRE);
+
+	return a;
+}
+
+#define ATOMIC atomic_add()
+
+static void __rte_noinline
+__worker_ATOMIC(struct lcore_data *ldata)
+{
+	uint64_t start;
+	int i;
+
+	while (!ldata->done) {
+		start = rte_rdtsc();
+
+		for (i=0; i < STEP; i++)
+			CENT_OPS(ATOMIC);
+
+		ldata->total_cycles += rte_rdtsc() - start;
+		ldata->total_calls++;
+	}
+}
+
+static int
+worker_fn_ATOMIC(void *arg)
+{
+	struct lcore_data *ldata = arg;
+
+	ldata->started = 1;
+	rte_smp_wmb();
+
+	__worker_ATOMIC(ldata);
+
+	return 0;
+}
 
 static void
 run_test(const char *str, lcore_function_t fn, struct test_data *data, size_t sz)
@@ -415,6 +459,7 @@ main(int argc, char **argv)
 	run_test("GET_CLOCK", worker_fn_GET_CLOCK, data, sz);
 	run_test("GET_CPU", worker_fn_GET_CPU, data, sz);
 	run_test("ZERO_ARG", worker_fn_ZERO_ARG, data, sz);
+	run_test("ATOMIC", worker_fn_ATOMIC, data, sz);
 
 	rte_free(data);
 	return rte_eal_cleanup();
